@@ -3,7 +3,6 @@ class APIGame {
 
 	// TODO must be redesign (and move to api.helpers.php)
 	static function checkGameDates(&$message) {
-
 		if (APIHelpers::$FHQSESSION != NULL) {
 			if (!isset(APIHelpers::$FHQSESSION['game'])) {
 				$message = 'Select game please';
@@ -11,7 +10,7 @@ class APIGame {
 			}
 		} else {
 			if (!isset($_SESSION['game'])) {
-				$message = 'Select game please';
+				$message = 'Select game please 2';
 				return false;
 			}
 		}

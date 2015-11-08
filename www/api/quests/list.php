@@ -2,7 +2,7 @@
 /*
  * API_NAME: Quest List
  * API_DESCRIPTION: Method will be returned quest list
- * API_ACCESS: authorized users
+ * API_ACCESS: all
  * API_INPUT: token - string, token
  * API_INPUT: filter_open - boolean, filter by open quests (it not taked)
  * API_INPUT: filter_current - boolean, filter by in progress quests (taked)
@@ -17,19 +17,20 @@ include_once ($curdir."/../api.lib/api.helpers.php");
 include_once ($curdir."/../api.lib/api.game.php");
 include_once ($curdir."/../../config/config.php");
 
-
 $response = APIHelpers::startpage($config);
 
-APIHelpers::checkAuth();
+// APIHelpers::checkAuth();
 
 $conn = APIHelpers::createConnection($config);
 
 $message = '';
 
-if (!APIGame::checkGameDates($message))
-	APIHelpers::showerror(1094, $message);
+if(APIGame::id() != 0){
+	if (!APIGame::checkGameDates($message))
+		APIHelpers::showerror(1094, $message);
+}
 
-if (APIGame::id() == 0)
+if (APIGame::id() == 0 && APISecurity::isLogged())
 	APIHelpers::showerror(1095, "Game was not selected.");
 
 // TODO: must be added filters
@@ -50,11 +51,28 @@ $response['filter']['current'] = filter_var($response['filter']['current'], FILT
 $response['filter']['completed'] = filter_var($response['filter']['completed'], FILTER_VALIDATE_BOOLEAN);
 
 $response['gameid'] = APIGame::id();
-$response['userid'] = APISecurity::userid();
 
-$filter_by_state = APISecurity::isAdmin() ? '' : ' AND quest.state = "open" ';
+// APIHelpers::showerror(9999, "12");
+$userid = APISecurity::userid();
+$response['userid'] = $userid;
 
-$filter_by_score = APISecurity::isAdmin() ? '' : ' AND quest.min_score <= '.APISecurity::score().' ';
+// APIHelpers::showerror(9999, "111");
+
+$filters = array();
+
+if(APIGame::id() != 0){
+	$filters[] = 'quest.gameid = '.APIGame::id(); // todo check sqlinj
+}
+
+if(!APISecurity::isAdmin()){
+	$filters[] = 'quest.state = "open"';
+}
+
+if(!APISecurity::isAdmin()){
+	'quest.min_score <= '.APISecurity::score();
+}
+
+$filters_text = implode(' AND ', $filters);
 
 // calculate count summary
 try {
@@ -64,11 +82,9 @@ try {
 			FROM
 				quest
 			WHERE
-				gameid = ?
-				'.$filter_by_state.'
-				'.$filter_by_score.'
+				'.$filters_text.'
 	');
-	$stmt->execute(array(APIGame::id()));
+	$stmt->execute();
 	if($row = $stmt->fetch())
 		$response['status']['summary'] = $row['cnt'];
 } catch(PDOException $e) {
@@ -84,14 +100,23 @@ try {
 				quest
 			LEFT JOIN users_quests ON users_quests.questid = quest.idquest AND users_quests.userid = ?
 			WHERE
-				gameid = ?
-				'.$filter_by_state.'
-				'.$filter_by_score.'
+				'.$filters_text.'
 				AND isnull(users_quests.dt_passed)
 	';
+
+	if($userid==0){
+		$query = '
+				SELECT
+					count(quest.idquest) as cnt
+				FROM
+					quest
+				WHERE
+					'.$filters_text.'
+		';
+	}
 	// $response['query_open'] = $query;
 	$stmt1 = $conn->prepare($query);
-	$stmt1->execute(array(APISecurity::userid(),APIGame::id()));
+	$stmt1->execute(array(APISecurity::userid()));
 	if($row = $stmt1->fetch())
 		$response['status']['open'] = $row['cnt'];
 } catch(PDOException $e) {
@@ -108,11 +133,22 @@ try {
 			INNER JOIN 
 				users_quests ON users_quests.questid = quest.idquest AND users_quests.userid = ?
 			WHERE
-				gameid = ?
-				'.$filter_by_state.'
-				'.$filter_by_score.'
+				'.$filters_text.'
 	');
-	$stmt->execute(array(APISecurity::userid(),APIGame::id()));
+	if($userid==0){
+		$query = '
+				SELECT
+					count(quest.idquest) as cnt
+				FROM
+					quest
+				LEFT JOIN
+					users_quests ON users_quests.questid = quest.idquest
+				WHERE
+					'.$filters_text.'
+		';
+	}
+	
+	$stmt->execute(array(APISecurity::userid()));
 	if($row = $stmt->fetch())
 		$response['status']['completed'] = $row['cnt'];
 } catch(PDOException $e) {
@@ -128,9 +164,7 @@ try {
 			FROM
 				quest
 			WHERE
-				gameid = ?
-				'.$filter_by_state.'
-				'.$filter_by_score.'
+				'.$filters_text.'
 			GROUP BY
 				quest.subject
 	');
@@ -144,7 +178,7 @@ try {
 }
 
 /*$userid = APIHelpers::getParam('userid', 0);*/
-$params = array(APISecurity::userid(), APIGame::id());
+$params = array(APISecurity::userid());
 
 // filter by status
 $arrWhere_status = array();
@@ -164,8 +198,7 @@ if (count($arrWhere_status) > 0)
 $filter_subjects = getParam('filter_subjects', '');
 $filter_subjects = explode(',', $filter_subjects);
 $arrWhere_subjects = array();
-foreach ($filter_subjects as $k)
-{
+foreach ($filter_subjects as $k){
 	if (strlen($k) > 0) {
 		$arrWhere_subjects[] = 'quest.subject = ?';
 		$params[] = $k;
@@ -191,22 +224,43 @@ $query = '
 			LEFT JOIN 
 				users_quests ON users_quests.questid = quest.idquest AND users_quests.userid = ?
 			WHERE
-				quest.gameid = ?
-				'.$filter_by_state.'
-				'.$filter_by_score.'
+				'.$filters_text.'
 				'.$where_status.'
 			ORDER BY
 				quest.subject, quest.score ASC, quest.score
 		';
+
+if($userid==0){
+	$query = '
+			SELECT 
+				quest.idquest,
+				quest.name,
+				quest.score,
+				quest.subject,
+				quest.state,
+				quest.gameid,
+				quest.author,
+				quest.text,
+				quest.count_user_solved
+			FROM 
+				quest
+			WHERE
+				'.$filters_text.'
+			ORDER BY
+				quest.subject, quest.score ASC, quest.score
+		';
+}
 
 try {
 	$stmt = $conn->prepare($query);
 	$stmt->execute($params);
 	while($row = $stmt->fetch())
 	{
-		$status = '';
+		$status = 'open';
 		
-		if ($row['dt_passed'] == null)
+		if (!isset($row['dt_passed']))
+			$status = 'open';
+		else if ($row['dt_passed'] == null)
 			$status = 'open';
 		else
 			$status = 'completed';
@@ -219,7 +273,7 @@ try {
 			'author' => $row['author'],
 			'gameid' => $row['gameid'],
 			'subject' => $row['subject'],
-			'dt_passed' => $row['dt_passed'],
+			// 'dt_passed' => $row['dt_passed'],
 			'state' => $row['state'],
 			'solved' => $row['count_user_solved'],
 			'status' => $status,

@@ -79,7 +79,7 @@ if (isset($_SESSION['user']))
 				$("#btnmenu_game").hide();
 
 				$("#btnmenu_rules").hide();
-				$("#btnmenu_quests").hide();
+				// $("#btnmenu_quests").hide();
 				$("#btnmenu_stats").hide();
 				
 				// $("#btnmenu_games").hide();
@@ -104,6 +104,8 @@ if (isset($_SESSION['user']))
 						fhqgui.loadMainPage();
 					}else if(page == "games"){
 						fhqgui.loadGames();
+					}else if(page == "quests"){
+						loadQuests();
 					}else if(page == "tools"){
 						fhqgui.loadTools();
 					}else if(page == "skills"){
@@ -292,12 +294,12 @@ if (isset($_SESSION['user']))
 				<div id="btnmenu_rules" class="fhq_btn_menu" data-hint="Rules" onclick="fhqgui.loadRules(0);">
 					<img class="fhq_btn_menu_img" src="images/menu/rules.png"/><br>
 				</div>
-				<div id="btnmenu_quests" class="fhq_btn_menu hint--bottom" data-hint="Quests" onclick="loadQuests();">
+				<a id="btnmenu_quests" class="fhq_btn_menu hint--bottom" data-hint="Quests" href="?page=quests">
 					<img class="fhq_btn_menu_img" src="images/menu/quests.png"/>
-				</div>
+				</a>
 				<a id="btnmenu_stats" class="fhq_btn_menu hint--bottom" data-hint="Statistics" href="?page=stats">
 					<img class="fhq_btn_menu_img" src="images/menu/stats.png"/>
-				</a>				
+				</a>			
 				<div class="fhq_btn_menu hint--bottom" data-hint="Filter" id="btnfilter" onclick="fhqgui.showFilter();">
 					<img class="fhq_btn_menu_img" src="images/menu/filter.png"/><br>
 				</div>

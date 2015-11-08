@@ -26,7 +26,7 @@ function FHQGuiLib(api) {
 	this.containsPageParam = function(name){
 		return (typeof this.pageParams[name] !== "undefined");
 	}
-	
+
 	// include write to localstorage
 	if(this.containsPageParam("color-spectrum")){
 		window.localStorage["freehackquest.color-spectrum"] = this.pageParams['color-spectrum'];

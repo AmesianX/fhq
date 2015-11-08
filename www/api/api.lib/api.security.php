@@ -120,7 +120,7 @@ class APISecurity {
 		} else {
 			$userid = (APISecurity::isLogged() && isset($_SESSION['user']['id'])) ? $_SESSION['user']['id'] : intval('');
 		}
-		if (intval($userid) == 0) {
+		if (intval($userid) == 0 && session_id() && APISecurity::isLogged()) {
 			session_destroy();
 			APIHelpers::showerror(1317, 'Please relogon');
 		}
