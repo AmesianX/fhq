@@ -27,15 +27,28 @@ function FHQGuiLib(api) {
 		return (typeof this.pageParams[name] !== "undefined");
 	}
 	
-	// include dark style
-	if(this.containsPageParam("dark")){
+	// include write to localstorage
+	if(this.containsPageParam("color-spectrum")){
+		window.localStorage["freehackquest.color-spectrum"] = this.pageParams['color-spectrum'];
+	}
+	console.log("freehackquest.color-spectrum:" + window.localStorage["freehackquest.color-spectrum"]);
+
+	this.colorSpectrum = function(){
+		if(this.containsPageParam("color-spectrum")){
+			this.pageParams['color-spectrum'];
+		}
+		return window.localStorage["freehackquest.color-spectrum"];
+	}
+	
+	// include color-spectrum link
+	if(this.colorSpectrum() == "dark"){
 		var link  = document.createElement('link');
 		link.rel  = 'stylesheet';
 		link.type = 'text/css';
 		link.href = 'templates/dark/styles/colors.css';
 		link.media = 'all';
 		document.head.appendChild(link);
-	};
+	}
 
 	this.createComboBox = function(idelem, defaultvalue, arr) {
 		var result = '<select id="' + idelem + '">';

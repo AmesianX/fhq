@@ -33,7 +33,7 @@ function FHQFrontEndLib() {
 		return matches ? decodeURIComponent(matches[1]) : '';
 	}
 
-	this.baseUrl = "http://fhq.keva.su/";
+	this.baseUrl = "http://freehackquest.com/";
 	this.token = this.getTokenFromCookie();
 	this.client = "FHQFrontEndLib.js";
 	this.profile = {

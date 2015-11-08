@@ -67,14 +67,14 @@ if (isset($_SESSION['user']))
 
 			$(document).ready(function() {
 				// loading cool dark style
-				if(fhqgui.containsPageParam("dark")){
+				if(fhqgui.colorSpectrum() == "dark"){
 					$('#jointothedarkside').attr('data-hint', 'You are on the dark side and you can not turning back.');
-					$('#jointothedarkside').attr('onclick', 'window.location.href = "?base";');
+					$('#jointothedarkside').attr('onclick', 'window.location.href = "?color-spectrum=base";');
 				}else{
 					$('#jointothedarkside').attr('data-hint', 'Join the dark side!');
-					$('#jointothedarkside').attr('onclick', 'window.location.href = "?dark";');
+					$('#jointothedarkside').attr('onclick', 'window.location.href = "?color-spectrum=dark";');
 				}
-				
+
 				$("#btnfilter").hide();
 				$("#btnmenu_game").hide();
 
@@ -120,34 +120,35 @@ if (isset($_SESSION['user']))
 					fhqgui.loadMainPage();
 				}
 			});
-
 		</script>
 
 		<!-- Yandex.Metrika counter -->
 		<script type="text/javascript">
-			(function (d, w, c) {
-				(w[c] = w[c] || []).push(function() {
-					try {
-						w.yaCounter32831012 = new Ya.Metrika({
-							id:32831012,
-							clickmap:true,
-							trackLinks:true,
-							accurateTrackBounce:true
-						});
-					} catch(e) { }
-				});
+			if (window.location.hostname != "localhost"){
+				(function (d, w, c) {
+					(w[c] = w[c] || []).push(function() {
+						try {
+							w.yaCounter32831012 = new Ya.Metrika({
+								id:32831012,
+								clickmap:true,
+								trackLinks:true,
+								accurateTrackBounce:true
+							});
+						} catch(e) { }
+					});
 
-				var n = d.getElementsByTagName("script")[0],
-					s = d.createElement("script"),
-					f = function () { n.parentNode.insertBefore(s, n); };
-				s.type = "text/javascript";
-				s.async = true;
-				s.src = "https://mc.yandex.ru/metrika/watch.js";
+					var n = d.getElementsByTagName("script")[0],
+						s = d.createElement("script"),
+						f = function () { n.parentNode.insertBefore(s, n); };
+					s.type = "text/javascript";
+					s.async = true;
+					s.src = "https://mc.yandex.ru/metrika/watch.js";
 
-				if (w.opera == "[object Opera]") {
-					d.addEventListener("DOMContentLoaded", f, false);
-				} else { f(); }
-			})(document, window, "yandex_metrika_callbacks");
+					if (w.opera == "[object Opera]") {
+						d.addEventListener("DOMContentLoaded", f, false);
+					} else { f(); }
+				})(document, window, "yandex_metrika_callbacks");
+			}
 		</script>
 		<noscript><div><img src="https://mc.yandex.ru/watch/32831012" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 		<!-- /Yandex.Metrika counter -->
@@ -189,7 +190,6 @@ if (isset($_SESSION['user']))
 			</div>
 
 			<!-- Sign In -->
-
 			<div id="signin-form" style="display: none;">
 				<!-- img src="images/logo_middle.png" /><br><br -->
 				<!-- todo replace type="text" to type="email" (html5) -->
@@ -223,7 +223,6 @@ if (isset($_SESSION['user']))
 			</div>
 
 			<!-- Reset Password -->
-
 			<div id="reset-password-form" style="display: none;">
 				<input placeholder="your@email.com" id="reset-password-email" value="" type="text" onkeydown="if (event.keyCode == 13) fhqgui.resetPassword(); else fhqgui.cleanupResetPasswordMessages();">
 				<br><br>
@@ -241,7 +240,6 @@ if (isset($_SESSION['user']))
 			</div>
 			
 			<!-- Right Menu Panel for Unathorized Users -->
-
 			<div id="rightpanel_unauth" class="fhqtopmenu_rightpanel">
 				<div class="fhq_btn_menu hint--bottom" data-hint="Sign In"  onclick="fhqgui.showSignInForm();">
 					<img class="fhq_btn_menu_img" src="images/menu/sign_in_50x50.png"/>
@@ -256,9 +254,8 @@ if (isset($_SESSION['user']))
 					<img class="fhq_btn_menu_img" src="images/menu/donate_50x50.png"/>
 				</div>
 			</div>
-			
+
 			<!-- Right Menu Panel for Athorized Users -->
-			
 			<div id="rightpanel_user" class="fhqtopmenu_rightpanel" style="display: none;">
 				<div class="fhq_btn_menu hint--bottom" data-hint="User profile"  onclick="">
 					<img class="fhq_btn_menu_img" src="images/menu/user.png"/>
@@ -273,7 +270,6 @@ if (isset($_SESSION['user']))
 			</div>
 
 			<!-- Horizontal Left Panel -->
-
 			<div class="fhqtopmenu_leftpanel">
 				<a id="btnmenu_main_page" class="fhq_btn_menu hint--right" data-hint="Main Page" href="?page=main_page">
 					<img class="fhq_btn_menu_img" src="templates/base/images/logo/fhq_2015_small.png"/>
