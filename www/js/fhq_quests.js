@@ -75,6 +75,7 @@ function reloadQuests()
 			}
 			quests.innerHTML += '<center>' + stats.join(', ') + '</center>';
 
+			// todo deprecated
 			if (params.filter_current && obj.status.current > 0)
 				quests.innerHTML += '<hr><h3>In progress (' + obj.status.current + ')</h3><br><div id="current_quests"></div>';
 
@@ -105,8 +106,7 @@ function reloadQuests()
 	);	
 }
 
-function loadQuests()
-{
+function loadQuests(){
 	fhqgui.setFilter('quests');
 	var el = document.getElementById("content_page");
 	el.innerHTML = createQuestFilters();
@@ -133,7 +133,7 @@ function takeQuest(id)
 			if (obj.result == "ok") {
 				closeModalDialog();
 				reloadQuests();
-				showQuest(id);
+				fhqgui.showQuest(id);
 			} else {
 				document.getElementById("quest_error").innerHTML = obj.error.message;
 			}
@@ -163,7 +163,7 @@ function passQuest(id)
 				if (obj.new_user_score) {
 					document.getElementById('view_score').innerHTML = obj.new_user_score;
 				}
-				showQuest(id);
+				fhqgui.showQuest(id);
 			} else {
 				if (isShowMyAnswers())
 					updateMyAnswers(id);
@@ -219,7 +219,7 @@ function updateQuest(id)
 			if (obj.result == "ok") {
 				closeModalDialog();
 				reloadQuests();
-				showQuest(id);
+				fhqgui.showQuest(id);
 			} else {
 				alert(obj.error.message);
 			}
@@ -336,7 +336,7 @@ function formEditQuest(id)
 			content += createQuestRow('State:', fhqgui.combobox('editquest_state', obj.data.state, fhq.getQuestStates()));
 			content += createQuestRow('Description State:', '<textarea id="editquest_description_state">' + obj.data.description_state + '</textarea>');
 			content += createQuestRow('', '<div class="fhqbtn" onclick="updateQuest(' + obj.quest + ');">Update</div>'
-				+ '<div class="fhqbtn" onclick="showQuest(' + obj.quest + ');">Cancel</div>'
+				+ '<div class="fhqbtn" onclick="fhqgui.showQuest(' + obj.quest + ');">Cancel</div>'
 			);
 
 			content += '</div>';
@@ -351,89 +351,6 @@ function formEditQuest(id)
 				+ ' <a class="fhqbtn" target="_ablank" href="' + obj.data.files[k].filepath + '">Download</a>' 
 				+ ' <div class="fhqbtn" onclick="removeQuestFile(' + obj.data.files[k].id + ', ' + obj.quest + ');">Remove</div><br>';
 			}
-		}
-	);
-}
-
-function showQuest(id)
-{
-	var params = {};
-	params.taskid = id;
-	send_request_post(
-		'api/quests/get.php',
-		createUrlFromObj(params),
-		function (obj) {
-			var content = '\n';
-
-			if (!obj.quest) {
-				showModalDialog("error");
-				return;
-			}
-			content += '<div class="quest_info_table">\n';
-			
-			content += createQuestRow('Quest ID: ', obj.quest);
-			if (obj.data.game_title)
-				content += createQuestRow('Game: ', obj.data.game_title);
-	
-			if (obj.data.name)
-				content += createQuestRow('Name: ', obj.data.name);
-				
-			if (obj.data.subject)
-				content += createQuestRow('Subject: ', obj.data.subject);
-
-			if (obj.data.score)
-				content += createQuestRow('Score: ', '+' + obj.data.score + ' (>' + obj.data.min_score + ')');
-			
-			if (obj.data.author)
-				content += createQuestRow('Author: ', obj.data.author);
-
-			
-			if (obj.data.dt_passed == null) {
-				if (obj.data.text)
-					content += createQuestRow('Text: ', '<pre>' + obj.data.text + '</pre>');
-				
-				if (obj.data.files && obj.data.files.length > 0) {
-					var files1 = '';						
-					for (var k in obj.data.files) {
-						files1 += '<a class="fhqbtn" href="' + obj.data.files[k].filepath + '" target="_ablank"> Download '+ obj.data.files[k].filename + '</a><br>';
-					}
-					content += createQuestRow('Attachmnet files: ', files1);
-				}
-
-				content += createQuestRow('', '<input id="quest_answer" type="text" onkeydown="if (event.keyCode == 13) passQuest(' + obj.quest + ');"/>'
-					+ '<div class="fhqbtn" onclick="passQuest(' + obj.quest + ');">Pass quest</div>'
-				);
-				content += createQuestRow('', '<div class="fhqbtn" onclick="showMyAnswers(' + obj.quest + ');">Show/Hide my answers</div><br>'
-					+ '<div id="user_answers"></div>'
-				);					
-			} else {
-				if (obj.data.text)
-					content += createQuestRow('Text: ', '<pre>' + obj.data.text + '</pre>');
-				
-				if (obj.data.files && obj.data.files.length > 0) {
-					var files1 = '';						
-					for (var k in obj.data.files) {
-						files1 += '<a class="fhqbtn" href="' + obj.data.files[k].filepath + '" target="_ablank"> Download '+ obj.data.files[k].filename + '</a><br>';
-					}
-					content += createQuestRow('Attachmnet files: ', files1);
-				}
-
-				if (obj.data.dt_passed)
-					content += createQuestRow('Date Stop: ', obj.data.dt_passed);
-			}
-			
-			if (obj.permissions.edit == true && obj.permissions['delete'] == true) {
-				content += createQuestRow('',
-					'<div class="fhqbtn" onclick="formEditQuest(' + obj.quest + ');">Edit</div>'
-					+ '<div class="fhqbtn" onclick="deleteQuest(' + obj.quest + ');">Delete</div>'
-					+ '<div class="fhqbtn" onclick="fhqgui.exportQuest(' + obj.quest + ');">Export</div>'
-				);
-			}
-			content += createQuestRow('','<div class="fhqbtn" onclick="fhqgui.openQuestInNewTab(' + obj.quest + ');">Open in new tab</div>');
-			content += '</div>';
-			content += '<div id="quest_error"><div>';
-			content += '\n';
-			showModalDialog(content);
 		}
 	);
 }

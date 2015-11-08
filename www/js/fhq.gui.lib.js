@@ -303,6 +303,10 @@ function FHQGuiLib(api) {
 		});
 	};
 
+	this.btnsSignInOrSignUp = function() {
+		return '<div class="fhqbtn" onclick="fhqgui.showSignInForm();">Sign In</div> or <div class="fhqbtn" onclick="fhqgui.showSignUpForm();">Sign Up</div>';
+	}
+
 	this.loadCities = function() {
 		this.api.publicInfo(function(response){
 			if (response.result == "fail") {
@@ -688,12 +692,11 @@ function FHQGuiLib(api) {
 	this.questIcon = function(questid, name, subject, score, solved) {
 		solved = solved == null ? "?" : solved;
 
-		var content = '\n\n<div class="fhq_quest_info" onclick="showQuest(' + questid + ');">';
+		var content = '\n\n<a class="fhq_quest_info" href="?page=quest&questid=' + questid + '">';
 		content += '<div class="fhq_quest_info_row">\n';
 		content += '<div class="fhq_quest_info_cell_img">';
 		content += '<img  width="100px" src="images/quests/' + subject + '.png">';
 		content += '</div>';
-		
 		content += '<div class="fhq_quest_info_cell_content">';
 		content += '<div class="fhq_quest_caption">' + questid + ' ' + name + '</div>';
 		content += '<div class="fhq_quest_score">' + subject + ' +' + score + '</div>';
@@ -718,7 +721,7 @@ function FHQGuiLib(api) {
 		var questid = this.getUrlParameterByName("questid");
 		var userid = this.getUrlParameterByName("userid");
 		if (questid) {
-			showQuest(questid);
+			this.showQuest(questid);
 		} else if (userid) {
 			this.showFullUserProfile(userid);
 		};
@@ -1086,13 +1089,19 @@ function FHQGuiLib(api) {
 			}
 		);
 	}
-	
+
 	this.handleFail = function(response){
 		if(response.result=='fail'){
 			if(response.error.code == 1224){
-				self.showFHQModalDialog({
-					'header' : '',
+				this.showFHQModalDialog({
+					'header' : 'Unauthorized',
 					'content' : 'Please Sing In or Sing Up',
+					'buttons' : ''
+				});
+			}else{
+				this.showFHQModalDialog({
+					'header' : 'Error',
+					'content' : response.error.message,
 					'buttons' : ''
 				});
 			}
@@ -1302,6 +1311,155 @@ function FHQGuiLib(api) {
 				}
 			}
 		);
+	}
+	
+	this.loadQuest = function(){
+		$('#content_page').html("Loading...");
+		if(!this.containsPageParam('questid')){
+			$('#content_page').html("Not found parameter questid");
+			return;
+		}
+		var questid = this.pageParams['questid'];
+		var self = this;
+		this.api.quests.get(questid, function(response){
+			$('#content_page').html("");
+			if(self.handleFail(response)){
+				console.log("handle fail");
+				return;
+			}
+			$('#content_page').append("<h1>" + response.game.title + "</h1>");
+			$('#content_page').append("<h3>#" + response.data.id + " "
+				+ response.data.name + " (" + response.data.subject + " +" + response.data.score + ")</h3>"
+			);
+			$('#content_page').append('<pre style="width: 50%">' + response.data.text + "</pre>");
+			$('#content_page').append('Files here');
+			$('#content_page').append('<hr>');
+			if(response.permissions.pass == true){
+				$('#content_page').append("</input><div class='fhqbtn'>Pass</div>");
+			}else{
+				$('#content_page').append('For try pass quest you need: ' + self.btnsSignInOrSignUp());
+			}
+			
+			// todo edit/delete/export
+			$('#content_page').append('<hr>');
+			$('#content_page').append('<canvas id="questChart" width="300" height="200"></canvas><br>');
+			
+			// statistics
+			var options = {
+				segmentShowStroke : true,
+				segmentStrokeColor : "#00000",
+				segmentStrokeWidth : 1,
+				percentageInnerCutout : 35, // This is 0 for Pie charts
+				animationSteps : 100,
+				animationEasing : "easeOutBounce",
+				animateRotate : false,
+				animateScale : false,
+				legendTemplate : "<ul class=\"<%=name.toLowerCase()%>-legend\"><% for (var i=0; i<segments.length; i++){%><li><span style=\"background-color:<%=segments[i].fillColor%>\"></span><%if(segments[i].label){%><%=segments[i].label%><%}%></li><%}%></ul>"
+			};
+				
+			var data = [
+				{ value: response.statistics.solved, color: "#54ab00", highlight: "#606060", label: "Solved" },
+				{ value: response.statistics.tries_solved, color: "#3c44a7", highlight: "#606060", label: "Tried (who solved)" },
+				{ value: response.statistics.tries_nosolved, color:"#c80000", highlight: "#606060", label: "Tried (who didn't solve)" }
+			];
+			var ctx = document.getElementById("questChart").getContext("2d");
+			var myNewChart = new Chart(ctx).Doughnut(data, options);
+
+			$('#content_page').append('<hr><h3>Users who solved quest</h3>');
+			var usrs = [];
+			for (var u in response.statistics.users) {
+				var ud = response.statistics.users[u];
+				usrs.push(self.userIcon(ud.id, ud.logo, ud.nick));
+			}
+			$('#content_page').append(usrs.join(" "));
+		});
+	}
+	
+	this.showQuest = function(id) {
+		var self = this;
+		this.api.quests.get(id, function(response){
+			if(self.handleFail(response)){
+				console.log("handle fail");
+				return;
+			}
+			alert(JSON.stringify(response));
+		});
+		/*send_request_post(
+			'api/quests/get.php',
+			createUrlFromObj(params),
+			function (obj) {
+				var content = '\n';
+				console.log(obj);
+				
+				console.log("handle fail false");
+
+				content += '<div class="quest_info_table">\n';
+				
+				content += createQuestRow('Quest ID: ', obj.quest);
+				if (obj.data.game_title)
+					content += createQuestRow('Game: ', obj.data.game_title);
+		
+				if (obj.data.name)
+					content += createQuestRow('Name: ', obj.data.name);
+					
+				if (obj.data.subject)
+					content += createQuestRow('Subject: ', obj.data.subject);
+
+				if (obj.data.score)
+					content += createQuestRow('Score: ', '+' + obj.data.score + ' (>' + obj.data.min_score + ')');
+				
+				if (obj.data.author)
+					content += createQuestRow('Author: ', obj.data.author);
+
+				
+				if (obj.data.dt_passed == null) {
+					if (obj.data.text)
+						content += createQuestRow('Text: ', '<pre>' + obj.data.text + '</pre>');
+					
+					if (obj.data.files && obj.data.files.length > 0) {
+						var files1 = '';						
+						for (var k in obj.data.files) {
+							files1 += '<a class="fhqbtn" href="' + obj.data.files[k].filepath + '" target="_ablank"> Download '+ obj.data.files[k].filename + '</a><br>';
+						}
+						content += createQuestRow('Attachmnet files: ', files1);
+					}
+
+					content += createQuestRow('', '<input id="quest_answer" type="text" onkeydown="if (event.keyCode == 13) passQuest(' + obj.quest + ');"/>'
+						+ '<div class="fhqbtn" onclick="passQuest(' + obj.quest + ');">Pass quest</div>'
+					);
+					content += createQuestRow('', '<div class="fhqbtn" onclick="showMyAnswers(' + obj.quest + ');">Show/Hide my answers</div><br>'
+						+ '<div id="user_answers"></div>'
+					);					
+				} else {
+					if (obj.data.text)
+						content += createQuestRow('Text: ', '<pre>' + obj.data.text + '</pre>');
+					
+					if (obj.data.files && obj.data.files.length > 0) {
+						var files1 = '';						
+						for (var k in obj.data.files) {
+							files1 += '<a class="fhqbtn" href="' + obj.data.files[k].filepath + '" target="_ablank"> Download '+ obj.data.files[k].filename + '</a><br>';
+						}
+						content += createQuestRow('Attachmnet files: ', files1);
+					}
+
+					if (obj.data.dt_passed)
+						content += createQuestRow('Date Stop: ', obj.data.dt_passed);
+				}
+				
+				if (obj.permissions.edit == true && obj.permissions['delete'] == true) {
+					content += createQuestRow('',
+						'<div class="fhqbtn" onclick="formEditQuest(' + obj.quest + ');">Edit</div>'
+						+ '<div class="fhqbtn" onclick="deleteQuest(' + obj.quest + ');">Delete</div>'
+						+ '<div class="fhqbtn" onclick="fhqgui.exportQuest(' + obj.quest + ');">Export</div>'
+					);
+				}
+				content += createQuestRow('','<div class="fhqbtn" onclick="fhqgui.openQuestInNewTab(' + obj.quest + ');">Open in new tab</div>');
+				content += '</div>';
+				content += '<div id="quest_error"><div>';
+				content += '\n';
+				showModalDialog(content);
+			}
+		);*/
 	}
 };
 

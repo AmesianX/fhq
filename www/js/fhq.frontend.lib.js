@@ -180,12 +180,10 @@ function FHQFrontEndLib() {
 			var bRes = obj.result == "ok";
 			return bRes ? obj : obj.error;
 		};
-		this.get = function(questid) {
+		this.get = function(questid, callback) {
 			var params = {};
-			params.taskid = questid;
-			var obj = this.p.sendPostRequest_Sync('api/quests/get.php', params);
-			var bRes = obj.result == "ok";
-			return bRes ? obj.data : obj.error;
+			params.questid = questid;
+			this.p.sendPostRequest_Async('api/quests/get.php', params, callback);
 		};
 		// return all information if you are admin
 		this.get_all = function(questid) {

@@ -1,18 +1,3 @@
-<?php
-
-if (!file_exists("config/config.php")) {
-	echo "Please configure config/config.php";
-	exit;
-};
-
-session_start();
-if (isset($_SESSION['user']))
-{
-	header ("Location: main.php");
-	exit;
-};
-
-?>
 <html>
 	<head>
 		<title>Free Hack Quest</title>
@@ -54,7 +39,6 @@ if (isset($_SESSION['user']))
 		<script type="text/javascript" src="js/fhq_timer.js?ver=1"></script>
 		<script type="text/javascript" src="js/fhq_updates.js?ver=1"></script>
 		<script type="text/javascript" src="js/fhq_events.js?ver=1"></script>
-		<script type="text/javascript" src="js/fhq_stats.js?ver=1"></script>
 		<script type="text/javascript" src="js/fhq_feedback.js?ver=1"></script>
 		<script type="text/javascript">
 			var fhq = new FHQFrontEndLib();
@@ -80,7 +64,6 @@ if (isset($_SESSION['user']))
 
 				$("#btnmenu_rules").hide();
 				// $("#btnmenu_quests").hide();
-				$("#btnmenu_stats").hide();
 				
 				// $("#btnmenu_games").hide();
 				// $("#btnmenu_skills").hide();
@@ -106,15 +89,13 @@ if (isset($_SESSION['user']))
 						fhqgui.loadGames();
 					}else if(page == "quests"){
 						loadQuests();
+					}else if(page == "quest"){
+						fhqgui.loadQuest();
 					}else if(page == "tools"){
 						fhqgui.loadTools();
 					}else if(page == "skills"){
 						fhqgui.createPageSkills();
 						fhqgui.updatePageSkills();
-					}else if(page == "stats"){
-						// todo
-						createPageStatistics('.$gameid.');
-						updateStatistics('.$gameid.');
 					}else{
 						$("#content_page").html('unknown page');
 					}
@@ -297,9 +278,6 @@ if (isset($_SESSION['user']))
 				<a id="btnmenu_quests" class="fhq_btn_menu hint--bottom" data-hint="Quests" href="?page=quests">
 					<img class="fhq_btn_menu_img" src="images/menu/quests.png"/>
 				</a>
-				<a id="btnmenu_stats" class="fhq_btn_menu hint--bottom" data-hint="Statistics" href="?page=stats">
-					<img class="fhq_btn_menu_img" src="images/menu/stats.png"/>
-				</a>			
 				<div class="fhq_btn_menu hint--bottom" data-hint="Filter" id="btnfilter" onclick="fhqgui.showFilter();">
 					<img class="fhq_btn_menu_img" src="images/menu/filter.png"/><br>
 				</div>
